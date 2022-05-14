@@ -10,6 +10,6 @@ import lombok.Value;
 public class ServiceAddresses {
     private final String composite;
     private final String product;
-    private final String review;
     private final String recommendation;
+    private final String review;
 }
