@@ -14,7 +14,7 @@ public interface RecommendationService {
      * @return the recommendations of the product
      */
     @GetMapping(value = "/recommendation", produces = MediaType.APPLICATION_JSON_VALUE)
-    List<Recommendation> getRecommendation(
+    List<Recommendation> getRecommendations(
         @RequestParam(value = "productId", required = true) int productId
     );
 }
