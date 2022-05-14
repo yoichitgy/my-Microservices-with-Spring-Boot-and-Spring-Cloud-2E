@@ -8,8 +8,8 @@ import lombok.Value;
 @AllArgsConstructor
 @NoArgsConstructor(force = true)
 public class ServiceAddresses {
-    private final String cmp;
-    private final String pro;
-    private final String rev;
-    private final String rec;
+    private final String composite;
+    private final String product;
+    private final String review;
+    private final String recommendation;
 }
