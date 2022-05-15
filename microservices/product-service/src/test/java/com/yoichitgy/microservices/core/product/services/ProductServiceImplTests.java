@@ -33,15 +33,15 @@ class ProductServiceImplTests extends ContainerTestBase {
     @Test
     void getProductInvalidParameterString() {
   
-      client.get()
-        .uri("/product/no-integer")
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus().isEqualTo(HttpStatus.BAD_REQUEST)
-        .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody()
-            .jsonPath("$.path").isEqualTo("/product/no-integer")
-            .jsonPath("$.message").isEqualTo("Type mismatch.");
+        client.get()
+            .uri("/product/no-integer")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.BAD_REQUEST)
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBody()
+                .jsonPath("$.path").isEqualTo("/product/no-integer")
+                .jsonPath("$.message").isEqualTo("Type mismatch.");
     }
   
     @Test
@@ -50,14 +50,14 @@ class ProductServiceImplTests extends ContainerTestBase {
       int productIdNotFound = 13;
   
       client.get()
-        .uri("/product/" + productIdNotFound)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus().isNotFound()
-        .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody()
-            .jsonPath("$.path").isEqualTo("/product/" + productIdNotFound)
-            .jsonPath("$.message").isEqualTo("No product found for productId: " + productIdNotFound);
+          .uri("/product/" + productIdNotFound)
+          .accept(MediaType.APPLICATION_JSON)
+          .exchange()
+          .expectStatus().isNotFound()
+          .expectHeader().contentType(MediaType.APPLICATION_JSON)
+          .expectBody()
+              .jsonPath("$.path").isEqualTo("/product/" + productIdNotFound)
+              .jsonPath("$.message").isEqualTo("No product found for productId: " + productIdNotFound);
     }
   
     @Test
@@ -66,13 +66,13 @@ class ProductServiceImplTests extends ContainerTestBase {
       int productIdInvalid = -1;
   
       client.get()
-        .uri("/product/" + productIdInvalid)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
-        .expectHeader().contentType(MediaType.APPLICATION_JSON)
-        .expectBody()
-            .jsonPath("$.path").isEqualTo("/product/" + productIdInvalid)
-            .jsonPath("$.message").isEqualTo("Invalid productId: " + productIdInvalid);
+          .uri("/product/" + productIdInvalid)
+          .accept(MediaType.APPLICATION_JSON)
+          .exchange()
+          .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
+          .expectHeader().contentType(MediaType.APPLICATION_JSON)
+          .expectBody()
+              .jsonPath("$.path").isEqualTo("/product/" + productIdInvalid)
+              .jsonPath("$.message").isEqualTo("Invalid productId: " + productIdInvalid);
     }
 }
