@@ -1,15 +1,15 @@
 package com.yoichitgy.api.core.product;
 
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Value;
 
-@Value
+@Data
 @AllArgsConstructor
 @NoArgsConstructor(force = true)
 public class Product {
-    private final int productId;
-    private final String name;
-    private final int weight;
-    private final String serviceAddress;
+    private int productId;
+    private String name;
+    private int weight;
+    private String serviceAddress;
 }
