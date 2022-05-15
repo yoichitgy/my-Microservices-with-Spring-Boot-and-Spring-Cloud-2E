@@ -3,15 +3,17 @@ package com.yoichitgy.api.composite.product;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
-import lombok.Value;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Value
+@Data
 @AllArgsConstructor
+@NoArgsConstructor(force = true)
 public class ProductAggregate {
-    private final int productId;
-    private final String name;
-    private final int weight;
-    private final List<RecommendationSummary> recommendations;
-    private final List<ReviewSummary> reviews;
-    private final ServiceAddresses serviceAddresses;
+    private int productId;
+    private String name;
+    private int weight;
+    private List<RecommendationSummary> recommendations;
+    private List<ReviewSummary> reviews;
+    private ServiceAddresses serviceAddresses;
 }
