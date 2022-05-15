@@ -3,7 +3,7 @@ version: '2.2'
 services:
   product:
     build: microservices/product-service
-    mem_limit: 256m
+    mem_limit: 128m
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
@@ -12,7 +12,7 @@ services:
   
   recommendation:
     build: microservices/recommendation-service
-    mem_limit: 256m
+    mem_limit: 128m
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
@@ -21,7 +21,7 @@ services:
 
   review:
     build: microservices/review-service
-    mem_limit: 256m
+    mem_limit: 128m
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
@@ -30,7 +30,7 @@ services:
 
   product-composite:
     build: microservices/product-composite-service
-    mem_limit: 256m
+    mem_limit: 128m
     ports:
       - "8080:8080"
     environment:
