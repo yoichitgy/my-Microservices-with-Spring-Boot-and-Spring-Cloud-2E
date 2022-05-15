@@ -1,13 +1,13 @@
 package com.yoichitgy.microservices.core.recommendation.services;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.List;
 
 import com.yoichitgy.api.core.recommendation.Recommendation;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
 class RecommendationMapperTests {

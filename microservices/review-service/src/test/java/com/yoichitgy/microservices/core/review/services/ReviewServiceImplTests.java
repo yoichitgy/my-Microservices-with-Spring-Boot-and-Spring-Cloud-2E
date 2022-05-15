@@ -1,6 +1,6 @@
 package com.yoichitgy.microservices.core.review.services;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static reactor.core.publisher.Mono.just;
 
 import com.yoichitgy.api.core.review.Review;
