@@ -50,10 +50,10 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
         var weight = product.getWeight();
 
         var recommendationSummaries = recommendations == null ? null : recommendations.stream()
-            .map(r -> new RecommendationSummary(r.getRecommendationId(), r.getAuthor(), r.getRate()))
+            .map(r -> new RecommendationSummary(r.getRecommendationId(), r.getAuthor(), r.getRate(), r.getContent()))
             .toList();
         var reviewSummaries = reviews == null ? null : reviews.stream()
-            .map(r -> new ReviewSummary(r.getReviewId(), r.getAuthor(), r.getSubject()))
+            .map(r -> new ReviewSummary(r.getReviewId(), r.getAuthor(), r.getSubject(), r.getContent()))
             .toList();
         var serviceAddresses = new ServiceAddresses(
             serviceAddress,
