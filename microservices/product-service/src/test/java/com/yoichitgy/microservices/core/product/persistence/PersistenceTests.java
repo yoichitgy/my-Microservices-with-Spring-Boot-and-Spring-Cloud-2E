@@ -1,9 +1,5 @@
 package com.yoichitgy.microservices.core.product.persistence;
 
-import static java.util.stream.IntStream.rangeClosed;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.data.domain.Sort.Direction.ASC;
-
 import com.yoichitgy.microservices.core.product.ContainerTestBase;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -13,8 +9,8 @@ import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoCo
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+
+import reactor.test.StepVerifier;
 
 @DataMongoTest(excludeAutoConfiguration = EmbeddedMongoAutoConfiguration.class)
 class PersistenceTests extends ContainerTestBase {
@@ -25,95 +21,76 @@ class PersistenceTests extends ContainerTestBase {
 
     @BeforeEach
     void setupDb() {
-        repository.deleteAll();
+        StepVerifier.create(repository.deleteAll()).verifyComplete();
 
         var entity = new ProductEntity(1, "n", 1);
-        savedEntity = repository.save(entity);
+        StepVerifier.create(repository.save(entity))
+            .consumeNextWith(response -> savedEntity = response)
+            .verifyComplete();
     }
 
     @Test
     void create() {
         var newEntity = new ProductEntity(2, "n", 2);
-        repository.save(newEntity);
+        StepVerifier.create(repository.save(newEntity))
+            .expectNextCount(1)
+            .verifyComplete();
 
-        var foundEntity = repository.findById(newEntity.getId()).get();
-        assertEquals(newEntity, foundEntity);
-        assertEquals(2, repository.count());
+        StepVerifier.create(repository.findByProductId(newEntity.getProductId()))
+            .expectNext(newEntity)
+            .verifyComplete();
+        StepVerifier.create(repository.count())
+            .expectNext(2L)
+            .verifyComplete();
     }
 
     @Test
     void update() {
         savedEntity.setName("n2");
-        repository.save(savedEntity);
-
-        var foundEntity = repository.findById(savedEntity.getId()).get();
-        assertEquals(1, foundEntity.getVersion());
-        assertEquals("n2", foundEntity.getName());
-    }
+        StepVerifier.create(repository.save(savedEntity))
+            .expectNextMatches(updated -> updated.getName().equals("n2"))
+            .verifyComplete();
+    
+        StepVerifier.create(repository.findById(savedEntity.getId()))
+            .expectNextMatches(found -> found.getVersion() == 1 && found.getName().equals("n2"))
+            .verifyComplete();
+        }
 
     @Test
     void delete() {
-        repository.delete(savedEntity);
-        assertFalse(repository.existsById(savedEntity.getId()));
+        StepVerifier.create(repository.delete(savedEntity)).verifyComplete();
+        StepVerifier.create(repository.existsById(savedEntity.getId())).expectNext(false).verifyComplete();
     }
 
     @Test
     void getByProductId() {
-        var entity = repository.findByProductId(savedEntity.getProductId());
-
-        assertTrue(entity.isPresent());
-        assertEquals(savedEntity, entity.get());
+        StepVerifier.create(repository.findByProductId(savedEntity.getProductId()))
+            .expectNext(savedEntity)
+            .verifyComplete();
     }
 
     @Test
     void duplicateError() {
-        assertThrows(DuplicateKeyException.class, () -> {
-            var entity = new ProductEntity(savedEntity.getProductId(), "n", 1);
-            repository.save(entity);
-            System.out.println("repository.count = " + repository.count());
-        });
+        var entity = new ProductEntity(savedEntity.getProductId(), "n", 1);
+        StepVerifier.create(repository.save(entity))
+            .expectError(DuplicateKeyException.class)
+            .verify();
     }
 
     @Test
     void optimisticLockError() {
-        var entity1 = repository.findById(savedEntity.getId()).get();
-        var entity2 = repository.findById(savedEntity.getId()).get();
-
+        var entity1 = repository.findById(savedEntity.getId()).block();
+        var entity2 = repository.findById(savedEntity.getId()).block();
+    
         entity1.setName("n1");
-        repository.save(entity1);
-
-        assertThrows(OptimisticLockingFailureException.class, () -> {
-            entity2.setName("n2");
-            repository.save(entity2);
-        }); 
-
-        ProductEntity updatedEntity = repository.findById(savedEntity.getId()).get();
-        assertEquals(1, updatedEntity.getVersion());
-        assertEquals("n1", updatedEntity.getName());
-    }
-
-    @Test
-    void paging() {
-        repository.deleteAll();
-
-        var newProducts = rangeClosed(1001, 1010)
-            .mapToObj(i -> new ProductEntity(i, "name " + i, i))
-            .toList();
-        repository.saveAll(newProducts);
-
-        Pageable nextPage = PageRequest.of(0, 4, ASC, "productId");
-        nextPage = testNextPage(nextPage, "[1001, 1002, 1003, 1004]", true);
-        nextPage = testNextPage(nextPage, "[1005, 1006, 1007, 1008]", true);
-        nextPage = testNextPage(nextPage, "[1009, 1010]", false);
-    }
-
-    private Pageable testNextPage(Pageable nextPage, String expectedProductIds, boolean expectsNextPage) {
-        var productPage = repository.findAll(nextPage);
-        assertEquals(
-            expectedProductIds,
-            productPage.getContent().stream().map(p -> p.getProductId()).toList().toString()
-        );
-        assertEquals(expectsNextPage, productPage.hasNext());
-        return productPage.nextPageable();
+        repository.save(entity1).block();
+    
+        StepVerifier.create(repository.save(entity2))
+            .expectError(OptimisticLockingFailureException.class)
+            .verify();
+    
+        StepVerifier.create(repository.findById(savedEntity.getId()))
+            .expectNextMatches(found -> found.getVersion() == 1 && found.getName().equals("n1"))
+            .verifyComplete();    
     }
 }
