@@ -1,17 +1,19 @@
 package com.yoichitgy.microservices.composite.product.services;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static reactor.core.publisher.Mono.just;
 
 import java.util.List;
 
-import javax.print.attribute.standard.Media;
-
+import com.yoichitgy.api.composite.product.ProductAggregate;
+import com.yoichitgy.api.composite.product.RecommendationSummary;
+import com.yoichitgy.api.composite.product.ReviewSummary;
 import com.yoichitgy.api.core.product.Product;
 import com.yoichitgy.api.core.recommendation.Recommendation;
 import com.yoichitgy.api.core.review.Review;
 import com.yoichitgy.api.exceptions.InvalidInputException;
 import com.yoichitgy.api.exceptions.NotFoundException;
-import com.yoichitgy.microservices.composite.product.services.ProductCompositeIntegration;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,45 +50,89 @@ class ProductCompositeServiceImplTests {
       
         when(compositeIntegration.getProduct(PRODUCT_ID_INVALID))
             .thenThrow(new InvalidInputException("INVALID: " + PRODUCT_ID_INVALID));
+
     }
 
     @Test
+    void createCompositeProduct1() {
+        var compositeProduct = new ProductAggregate(1, "name", 1, List.of(), List.of(), null);    
+        postAndVerifyProduct(compositeProduct, HttpStatus.OK);
+    }
+  
+    @Test
+    void createCompositeProduct2() {
+        var compositeProduct = new ProductAggregate(
+            1,
+            "name",
+            1,
+            List.of(new RecommendationSummary(1, "a", 1, "c")),
+            List.of(new ReviewSummary(1, "a", "s", "c")),
+            null)
+        ;
+        postAndVerifyProduct(compositeProduct, HttpStatus.OK);
+    }
+  
+    @Test
+    void deleteCompositeProduct() {
+        var compositeProduct = new ProductAggregate(
+            1,
+            "name",
+            1,
+            List.of(new RecommendationSummary(1, "a", 1, "c")),
+            List.of(new ReviewSummary(1, "a", "s", "c")),
+            null
+        );
+        postAndVerifyProduct(compositeProduct, HttpStatus.OK);
+
+        deleteAndVerifyProduct(compositeProduct.getProductId(), HttpStatus.OK);
+        deleteAndVerifyProduct(compositeProduct.getProductId(), HttpStatus.OK);
+    }
+  
+    @Test
     void getProductById() {
-        client.get()
-            .uri("/product-composite/" + PRODUCT_ID_OK)
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBody()
-                .jsonPath("$.productId").isEqualTo(PRODUCT_ID_OK)
-                .jsonPath("$.recommendations.length()").isEqualTo(1)
-                .jsonPath("$.reviews.length()").isEqualTo(1);
+        getAndVerifyProduct(PRODUCT_ID_OK, HttpStatus.OK)
+            .jsonPath("$.productId").isEqualTo(PRODUCT_ID_OK)
+            .jsonPath("$.recommendations.length()").isEqualTo(1)
+            .jsonPath("$.reviews.length()").isEqualTo(1);
     }
 
     @Test
     void getProductNotFound() {
-        client.get()
-            .uri("/product-composite/" + PRODUCT_ID_NOT_FOUND)
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus().isNotFound()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBody()
-                .jsonPath("$.path").isEqualTo("/product-composite/" + PRODUCT_ID_NOT_FOUND)
-                .jsonPath("$.message").isEqualTo("NOT FOUND: " + PRODUCT_ID_NOT_FOUND);
+        getAndVerifyProduct(PRODUCT_ID_NOT_FOUND, HttpStatus.NOT_FOUND)
+            .jsonPath("$.path").isEqualTo("/product-composite/" + PRODUCT_ID_NOT_FOUND)
+            .jsonPath("$.message").isEqualTo("NOT FOUND: " + PRODUCT_ID_NOT_FOUND);
     }
   
     @Test
     void getProductInvalidInput() {
-        client.get()
-            .uri("/product-composite/" + PRODUCT_ID_INVALID)
+        getAndVerifyProduct(PRODUCT_ID_INVALID, HttpStatus.UNPROCESSABLE_ENTITY)
+            .jsonPath("$.path").isEqualTo("/product-composite/" + PRODUCT_ID_INVALID)
+            .jsonPath("$.message").isEqualTo("INVALID: " + PRODUCT_ID_INVALID);
+    }
+
+    private WebTestClient.BodyContentSpec getAndVerifyProduct(int productId, HttpStatus expectedStatus) {
+        return client.get()
+            .uri("/product-composite/" + productId)
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
+            .expectStatus().isEqualTo(expectedStatus)
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBody()
-                .jsonPath("$.path").isEqualTo("/product-composite/" + PRODUCT_ID_INVALID)
-                .jsonPath("$.message").isEqualTo("INVALID: " + PRODUCT_ID_INVALID);
+            .expectBody();
     }
+    
+    private void postAndVerifyProduct(ProductAggregate compositeProduct, HttpStatus expectedStatus) {
+        client.post()
+            .uri("/product-composite")
+            .body(just(compositeProduct), ProductAggregate.class)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isEqualTo(expectedStatus);
+    }
+
+    private void deleteAndVerifyProduct(int productId, HttpStatus expectedStatus) {
+        client.delete()
+            .uri("/product-composite/" + productId)
+            .exchange()
+            .expectStatus().isEqualTo(expectedStatus);
+    }    
 }
