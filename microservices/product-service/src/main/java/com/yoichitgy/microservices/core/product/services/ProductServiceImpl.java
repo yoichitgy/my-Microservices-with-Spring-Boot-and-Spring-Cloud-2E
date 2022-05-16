@@ -30,14 +30,19 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product createProduct(Product body) {
+        int productId = body.getProductId();
+        if (productId < 1) {
+            throw new InvalidInputException("Invalid productId: " + productId);
+        }
+            
         try {
             var entity = mapper.apiToEntity(body);
             var newEntity = repository.save(entity);
 
-            LOG.debug("createProduct: entity created for productId: {}", body.getProductId());
+            LOG.debug("createProduct: entity created for productId: {}", productId);
             return mapper.entityToApi(newEntity);
         } catch (DuplicateKeyException ex) {
-            throw new InvalidInputException("Duplicate key, productId: " + body.getProductId());
+            throw new InvalidInputException("Duplicate key, productId: " + productId);
         }
     }
 
