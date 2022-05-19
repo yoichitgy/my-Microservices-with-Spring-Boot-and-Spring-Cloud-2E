@@ -1,15 +1,22 @@
 package com.yoichitgy.microservices.core.recommendation.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static reactor.core.publisher.Mono.just;
 
+import java.util.function.Consumer;
+
 import com.yoichitgy.api.core.recommendation.Recommendation;
+import com.yoichitgy.api.event.Event;
+import com.yoichitgy.api.event.Event.Type;
+import com.yoichitgy.api.exceptions.InvalidInputException;
 import com.yoichitgy.microservices.core.recommendation.ContainerTestBase;
 import com.yoichitgy.microservices.core.recommendation.persistence.RecommendationRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.HttpStatus;
@@ -22,19 +29,23 @@ class RecommendationServiceImplTests extends ContainerTestBase {
     private WebTestClient client;
     @Autowired
     private RecommendationRepository repository;
+    @Autowired
+    @Qualifier("messageProcessor")
+    private Consumer<Event<Integer, Recommendation>> messageProcessor;
 
     @BeforeEach
     void setupDb() {
-        repository.deleteAll();
+        repository.deleteAll().block();
     }
 
     @Test
     void getRecommendationsByProductId() {
         int productId = 1;
-        postAndVerifyRecommendation(productId, 1, HttpStatus.OK);
-        postAndVerifyRecommendation(productId, 2, HttpStatus.OK);
-        postAndVerifyRecommendation(productId, 3, HttpStatus.OK);
-        assertEquals(3, repository.findByProductId(productId).size());
+
+        sendCreateRecommendationEvent(productId, 1);
+        sendCreateRecommendationEvent(productId, 2);
+        sendCreateRecommendationEvent(productId, 3);
+        assertEquals(3, repository.findByProductId(productId).count().block());
 
         getAndVerifyRecommendationsByProductId(productId, HttpStatus.OK)
             .jsonPath("$.length()").isEqualTo(3)
@@ -47,28 +58,31 @@ class RecommendationServiceImplTests extends ContainerTestBase {
         int productId = 1;
         int recommendationId = 1;
     
-        postAndVerifyRecommendation(productId, recommendationId, HttpStatus.OK)
-            .jsonPath("$.productId").isEqualTo(productId)
-            .jsonPath("$.recommendationId").isEqualTo(recommendationId);
-        assertEquals(1, repository.count());
+        sendCreateRecommendationEvent(productId, recommendationId);
+        assertEquals(1, repository.count().block());
     
-        postAndVerifyRecommendation(productId, recommendationId, HttpStatus.UNPROCESSABLE_ENTITY)
-            .jsonPath("$.path").isEqualTo("/recommendation")
-            .jsonPath("$.message").isEqualTo("Duplicate key, productId: 1, recommendationId: 1");    
-        assertEquals(1, repository.count());
+        var thrown = assertThrows(
+            InvalidInputException.class,
+            () -> sendCreateRecommendationEvent(productId, recommendationId),
+            "Expected a InvalidInputException here!"
+        );
+        assertEquals("Duplicate key, productId: 1, recommendationId: 1", thrown.getMessage());
+      
+        assertEquals(1, repository.count().block());
     }
   
     @Test
     void deleteRecommendations() {
         int productId = 1;
         int recommendationId = 1;
-        postAndVerifyRecommendation(productId, recommendationId, HttpStatus.OK);
-        assertEquals(1, repository.findByProductId(productId).size());
+        
+        sendCreateRecommendationEvent(productId, recommendationId);
+        assertEquals(1, repository.findByProductId(productId).count().block());
     
-        deleteAndVerifyRecommendationsByProductId(productId, HttpStatus.OK);
-        assertEquals(0, repository.findByProductId(productId).size());
+        sendDeleteRecommendationEvent(productId);
+        assertEquals(0, repository.findByProductId(productId).count().block());
     
-        deleteAndVerifyRecommendationsByProductId(productId, HttpStatus.OK);
+        sendDeleteRecommendationEvent(productId);
     }
   
     @Test
@@ -114,7 +128,7 @@ class RecommendationServiceImplTests extends ContainerTestBase {
             .expectBody();
     }
 
-    private WebTestClient.BodyContentSpec postAndVerifyRecommendation(int productId, int recommendationId, HttpStatus expectedStatus) {
+    private void sendCreateRecommendationEvent(int productId, int recommendationId) {
         var recommendation = new Recommendation(
             productId,
             recommendationId,
@@ -123,22 +137,12 @@ class RecommendationServiceImplTests extends ContainerTestBase {
             "Content " + recommendationId,
             "SA"
         );
-        return client.post()
-            .uri("/recommendation")
-            .body(just(recommendation), Recommendation.class)
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus().isEqualTo(expectedStatus)
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBody();
+        var event = new Event<Integer, Recommendation>(Type.CREATE, productId, recommendation);
+        messageProcessor.accept(event);
     }
 
-    private WebTestClient.BodyContentSpec deleteAndVerifyRecommendationsByProductId(int productId, HttpStatus expectedStatus) {
-    return client.delete()
-        .uri("/recommendation?productId=" + productId)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus().isEqualTo(expectedStatus)
-        .expectBody();
+    private void sendDeleteRecommendationEvent(int productId) {
+        var event = new Event<Integer, Recommendation>(Type.DELETE, productId, null);
+        messageProcessor.accept(event);
     }
 }

@@ -3,7 +3,6 @@ package com.yoichitgy.microservices.composite.product;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.RestTemplate;
 
 import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -48,10 +47,5 @@ public class ProductCompositeServiceConfiguration {
         return new OpenAPI()
             .info(info)
             .externalDocs(exernalDocs);
-    }
-
-    @Bean
-    RestTemplate restTemplate() {
-        return new RestTemplate();
     }
 }

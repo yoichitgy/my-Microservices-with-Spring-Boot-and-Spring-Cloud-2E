@@ -1,22 +1,44 @@
-version: '2.2'
+version: '2.1'
 
 services:
   product:
     build: microservices/product-service
-    mem_limit: 128m
+    mem_limit: 512m
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned,streaming_instance_0
     depends_on:
       mongodb:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-  
+
+  product-p1:
+    build: microservices/product-service
+    mem_limit: 512m
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned,streaming_instance_1
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
   recommendation:
     build: microservices/recommendation-service
-    mem_limit: 128m
+    mem_limit: 512m
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned,streaming_instance_0
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  recommendation-p1:
+    build: microservices/recommendation-service
+    mem_limit: 512m
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned,streaming_instance_1
     depends_on:
       mongodb:
         condition: service_healthy
@@ -25,9 +47,20 @@ services:
 
   review:
     build: microservices/review-service
-    mem_limit: 128m
+    mem_limit: 512m
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned,streaming_instance_0
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  review-p1:
+    build: microservices/review-service
+    mem_limit: 512m
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned,streaming_instance_1
     depends_on:
       mysql:
         condition: service_healthy
@@ -36,19 +69,18 @@ services:
 
   product-composite:
     build: microservices/product-composite-service
-    mem_limit: 128m
+    mem_limit: 512m
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=docker,streaming_partitioned
     depends_on:
       rabbitmq:
         condition: service_healthy
 
-
   mongodb:
-    image: mongo:5.0.8
-    mem_limit: 256m
+    image: mongo:4.4.2
+    mem_limit: 512m
     ports:
       - "27017:27017"
     command: mongod
@@ -59,8 +91,8 @@ services:
       retries: 60
 
   mysql:
-    image: mysql:8.0.29
-    mem_limit: 256m
+    image: mysql:5.7.32
+    mem_limit: 512m
     ports:
       - "3306:3306"
     environment:
@@ -75,7 +107,7 @@ services:
       retries: 60
 
   rabbitmq:
-    image: rabbitmq:3.10.1-management
+    image: rabbitmq:3.8.11-management
     mem_limit: 512m
     ports:
       - 5672:5672
