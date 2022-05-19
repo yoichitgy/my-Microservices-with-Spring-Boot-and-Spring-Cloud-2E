@@ -83,7 +83,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 
     @Override
     public Mono<Product> getProduct(int productId) {
-        var url = productServiceUrl + "/" + productId;
+        var url = productServiceUrl + "/product/" + productId;
         LOG.debug("Will call getProduct API on URL: {}", url);
 
         return webClient.get()
@@ -113,7 +113,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 
     @Override
     public Flux<Recommendation> getRecommendations(int productId) {
-        var url = recommendationServiceUrl + "?productId=" + productId;
+        var url = recommendationServiceUrl + "recommendation?productId=" + productId;
         LOG.debug("Will call getRecommendations API on URL: {}", url);
 
         return webClient.get()
@@ -146,7 +146,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 
     @Override
     public Flux<Review> getReviews(int productId) {
-        var url = reviewServiceUrl + "?productId=" + productId;
+        var url = reviewServiceUrl + "review?productId=" + productId;
         LOG.debug("Will call getReviews API on URL: {}", url);
 
         return webClient.get()
