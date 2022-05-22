@@ -12,7 +12,6 @@ import com.yoichitgy.api.composite.product.ServiceAddresses;
 import com.yoichitgy.api.core.product.Product;
 import com.yoichitgy.api.core.recommendation.Recommendation;
 import com.yoichitgy.api.core.review.Review;
-import com.yoichitgy.api.exceptions.NotFoundException;
 import com.yoichitgy.util.http.ServiceUtil;
 
 import org.slf4j.Logger;
