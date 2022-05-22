@@ -22,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.support.MessageBuilder;
@@ -37,39 +36,27 @@ import reactor.core.scheduler.Scheduler;
 @Component
 public class ProductCompositeIntegration implements ProductService, RecommendationService, ReviewService {
     private static final Logger LOG = LoggerFactory.getLogger(ProductCompositeIntegration.class);
-    
+
+    private static final String PRODUCT_SERVICE_URL = "http://product";
+    private static final String RECOMMENDATION_SERVICE_URL = "http://recommendation";
+    private static final String REVIEW_SERVICE_URL = "http://review";
+  
     private final WebClient webClient;
     private final ObjectMapper mapper;
-
     private final StreamBridge streamBridge;
     private final Scheduler publishEventScheduler;
 
-    private final String productServiceUrl;
-    private final String recommendationServiceUrl;
-    private final String reviewServiceUrl;
-
     @Autowired
     public ProductCompositeIntegration(
-        WebClient.Builder webClient,
+        WebClient.Builder webClientBuilder,
         ObjectMapper mapper,
         StreamBridge streamBridge,
-        @Qualifier("publishEventScheduler") Scheduler publishEventScheduler,
-        @Value("${app.product-service.host}") String productServiceHost,
-        @Value("${app.product-service.port}") int productServicePort,
-        @Value("${app.recommendation-service.host}") String recommendationServiceHost,
-        @Value("${app.recommendation-service.port}") int recommendationServicePort,
-        @Value("${app.review-service.host}") String reviewServiceHost,
-        @Value("${app.review-service.port}") int reviewServicePort
+        @Qualifier("publishEventScheduler") Scheduler publishEventScheduler
     ) {
-        this.webClient = webClient.build();
+        this.webClient = webClientBuilder.build();
         this.mapper = mapper;
         this.streamBridge = streamBridge;
         this.publishEventScheduler = publishEventScheduler;
-
-        var format = "http://%s:%d";
-        productServiceUrl = String.format(format, productServiceHost, productServicePort);
-        recommendationServiceUrl = String.format(format, recommendationServiceHost, recommendationServicePort);
-        reviewServiceUrl = String.format(format, reviewServiceHost, reviewServicePort);
     }
 
     @Override
@@ -83,7 +70,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 
     @Override
     public Mono<Product> getProduct(int productId) {
-        var url = productServiceUrl + "/product/" + productId;
+        var url = PRODUCT_SERVICE_URL + "/product/" + productId;
         LOG.debug("Will call getProduct API on URL: {}", url);
 
         return webClient.get()
@@ -113,7 +100,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 
     @Override
     public Flux<Recommendation> getRecommendations(int productId) {
-        var url = recommendationServiceUrl + "/recommendation?productId=" + productId;
+        var url = RECOMMENDATION_SERVICE_URL + "/recommendation?productId=" + productId;
         LOG.debug("Will call getRecommendations API on URL: {}", url);
 
         return webClient.get()
@@ -146,7 +133,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 
     @Override
     public Flux<Review> getReviews(int productId) {
-        var url = reviewServiceUrl + "/review?productId=" + productId;
+        var url = REVIEW_SERVICE_URL + "/review?productId=" + productId;
         LOG.debug("Will call getReviews API on URL: {}", url);
 
         return webClient.get()
@@ -169,15 +156,15 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     public Mono<Health> getProductHealth() {
-        return getHealth(productServiceUrl);
+        return getHealth(PRODUCT_SERVICE_URL);
     }
 
     public Mono<Health> getRecommendationHealth() {
-        return getHealth(recommendationServiceUrl);
+        return getHealth(RECOMMENDATION_SERVICE_URL);
     }
     
     public Mono<Health> getReviewHealth() {
-        return getHealth(reviewServiceUrl);
+        return getHealth(REVIEW_SERVICE_URL);
     }    
 
     private Mono<Health> getHealth(String url) {

@@ -1,8 +1,10 @@
 package com.yoichitgy.microservices.composite.product;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -12,6 +14,13 @@ import io.swagger.v3.oas.models.info.License;
 
 @Configuration
 public class ProductCompositeServiceConfiguration {
+    @Bean
+    @LoadBalanced
+    public WebClient.Builder loadBalancedWebClientBuilder() {
+        return WebClient.builder();
+    }
+
+
     @Value("${api.common.version}")         String apiVersion;
     @Value("${api.common.title}")           String apiTitle;
     @Value("${api.common.description}")     String apiDescription;
