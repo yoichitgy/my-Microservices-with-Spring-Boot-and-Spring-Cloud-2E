@@ -1,7 +1,5 @@
 package com.yoichitgy.microservices.composite.product.services;
 
-import static java.util.logging.Level.FINE;
-
 import java.io.IOException;
 import java.util.logging.Level;
 
@@ -22,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.actuate.health.Health;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
@@ -153,30 +150,6 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
             var event = new Event<Integer, Review>(Type.DELETE, productId, null);
             sendMessage("reviews-out-0", event);
         }).subscribeOn(publishEventScheduler).then();
-    }
-
-    public Mono<Health> getProductHealth() {
-        return getHealth(PRODUCT_SERVICE_URL);
-    }
-
-    public Mono<Health> getRecommendationHealth() {
-        return getHealth(RECOMMENDATION_SERVICE_URL);
-    }
-    
-    public Mono<Health> getReviewHealth() {
-        return getHealth(REVIEW_SERVICE_URL);
-    }    
-
-    private Mono<Health> getHealth(String url) {
-        url += "/actuator/health";
-        LOG.debug("Will call the Health API on URL: {}", url);
-        return webClient.get()
-            .uri(url)
-            .retrieve()
-            .bodyToMono(String.class)
-            .map(s -> new Health.Builder().up().build())
-            .onErrorResume(ex -> Mono.just(new Health.Builder().down(ex).build()))
-            .log(LOG.getName(), FINE);
     }
 
     private void sendMessage(String bindingName, Event event) {
