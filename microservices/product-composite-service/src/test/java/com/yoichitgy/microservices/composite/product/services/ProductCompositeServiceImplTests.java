@@ -7,6 +7,7 @@ import com.yoichitgy.api.core.recommendation.Recommendation;
 import com.yoichitgy.api.core.review.Review;
 import com.yoichitgy.api.exceptions.InvalidInputException;
 import com.yoichitgy.api.exceptions.NotFoundException;
+import com.yoichitgy.microservices.composite.product.TestSecurityConfiguration;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,15 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, properties = {"eureka.client.enabled=false"})
+@SpringBootTest(
+    webEnvironment = WebEnvironment.RANDOM_PORT,
+    classes = {TestSecurityConfiguration.class},
+    properties = {
+        "spring.security.oauth2.resourceserver.jwt.issuer-uri=",
+        "spring.main.allow-bean-definition-overriding=true",
+        "eureka.client.enabled=false"
+    }
+)
 class ProductCompositeServiceImplTests {
     private static final int PRODUCT_ID_OK = 1;
     private static final int PRODUCT_ID_NOT_FOUND = 2;

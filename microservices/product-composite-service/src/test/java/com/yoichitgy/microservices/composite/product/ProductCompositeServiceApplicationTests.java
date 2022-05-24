@@ -2,8 +2,17 @@ package com.yoichitgy.microservices.composite.product;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 
-@SpringBootTest(properties = {"eureka.client.enabled=false"})
+@SpringBootTest(
+    webEnvironment = WebEnvironment.RANDOM_PORT,
+    classes = {TestSecurityConfiguration.class},
+    properties = {
+        "spring.security.oauth2.resourceserver.jwt.issuer-uri=",
+        "spring.main.allow-bean-definition-overriding=true",
+        "eureka.client.enabled=false"
+    }
+)
 class ProductCompositeServiceApplicationTests {
 
 	@Test

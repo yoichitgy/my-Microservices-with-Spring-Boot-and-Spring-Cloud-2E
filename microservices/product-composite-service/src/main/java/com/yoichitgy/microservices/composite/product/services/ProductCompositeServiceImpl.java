@@ -17,6 +17,11 @@ import com.yoichitgy.util.http.ServiceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.web.bind.annotation.RestController;
 
 import reactor.core.publisher.Mono;
@@ -24,6 +29,8 @@ import reactor.core.publisher.Mono;
 @RestController
 public class ProductCompositeServiceImpl implements ProductCompositeService {
     private static final Logger LOG = LoggerFactory.getLogger(ProductCompositeServiceImpl.class);
+
+    private final SecurityContext nullSecCtx = new SecurityContextImpl();
 
     private final ServiceUtil serviceUtil;
     private final ProductCompositeIntegration integration;
@@ -38,6 +45,8 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
     public Mono<Void> createProduct(ProductAggregate body) {
         try {
             List<Mono> monoList = new ArrayList<>();
+
+            monoList.add(getLogAuthorizationInMono());
 
             int productId = body.getProductId();
             LOG.debug("createCompositeProduct: creates a new composite entity for productId: {}", productId);
@@ -91,13 +100,14 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
         LOG.info("Will get composite product info for product.id={}", productId);
 
         return Mono.zip(
+                getLogAuthorizationInMono(),
                 integration.getProduct(productId),
                 integration.getRecommendations(productId).collectList(),
                 integration.getReviews(productId).collectList()
             ).map(values -> {
-                var product = values.getT1();
-                var recommendations = values.getT2();
-                var reviews = values.getT3();
+                var product = values.getT2();
+                var recommendations = values.getT3();
+                var reviews = values.getT4();
                 var address = serviceUtil.getServiceAddress();
                 return createProductAggregate(product, recommendations, reviews, address);
             }).doOnError(ex -> LOG.warn("getCompositeProduct failed: {}", ex.toString()))
@@ -110,6 +120,7 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
 
         try {
             return Mono.zip(
+                    getLogAuthorizationInMono(),
                     integration.deleteProduct(productId),
                     integration.deleteRecommendations(productId),
                     integration.deleteReviews(productId)
@@ -146,5 +157,45 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
         );
 
         return new ProductAggregate(productId, name, weight, recommendationSummaries, reviewSummaries, serviceAddresses);
+    }
+
+    private Mono<SecurityContext> getLogAuthorizationInMono() {
+        return getSecurityContextMono().doOnNext(sc -> logAuthorizationInfo(sc));
+    }
+
+    private Mono<SecurityContext> getSecurityContextMono() {
+        return ReactiveSecurityContextHolder.getContext().defaultIfEmpty(nullSecCtx);
+    }
+    
+    private void logAuthorizationInfo(SecurityContext sc) {
+        if (sc == null
+            || sc.getAuthentication() == null
+            || !(sc.getAuthentication() instanceof JwtAuthenticationToken)
+        ) {
+            LOG.warn("No JWT based Authentication supplied, running tests are we?");            
+            return;
+        }
+
+        Jwt jwtToken = ((JwtAuthenticationToken)sc.getAuthentication()).getToken();
+        logAuthorizationInfo(jwtToken);
+    }
+    
+    private void logAuthorizationInfo(Jwt jwt) {
+        if (jwt == null) {
+            LOG.warn("No JWT supplied, running tests are we?");
+            return;
+        }
+
+        if (LOG.isDebugEnabled()) {
+            var issuer = jwt.getIssuer();
+            var audience = jwt.getAudience();
+            var claims = jwt.getClaims();
+            var subject = claims.get("sub");
+            var scopes = claims.get("scope");
+            var expires = claims.get("exp");
+
+            LOG.debug("Authorization info: Subject: {}, scopes: {}, expires {}: issuer: {}, audience: {}",
+                subject, scopes, expires, issuer, audience);
+        }
     }
 }
