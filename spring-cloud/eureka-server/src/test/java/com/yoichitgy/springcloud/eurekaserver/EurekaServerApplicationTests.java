@@ -10,7 +10,10 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+	webEnvironment = WebEnvironment.RANDOM_PORT,
+	properties = {"spring.cloud.config.enabled=false"}
+)
 class EurekaServerApplicationTests {
 
 	@Test
