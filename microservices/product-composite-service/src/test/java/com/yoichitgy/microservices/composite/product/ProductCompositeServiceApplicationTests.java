@@ -10,7 +10,8 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
     properties = {
         "spring.security.oauth2.resourceserver.jwt.issuer-uri=",
         "spring.main.allow-bean-definition-overriding=true",
-        "eureka.client.enabled=false"
+        "eureka.client.enabled=false",
+		"spring.cloud.config.enabled=false"
     }
 )
 class ProductCompositeServiceApplicationTests {

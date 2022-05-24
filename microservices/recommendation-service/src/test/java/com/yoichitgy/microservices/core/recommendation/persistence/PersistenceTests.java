@@ -2,8 +2,6 @@ package com.yoichitgy.microservices.core.recommendation.persistence;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.List;
-
 import com.yoichitgy.microservices.core.recommendation.ContainerTestBase;
 
 import org.junit.jupiter.api.Test;
@@ -14,7 +12,10 @@ import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
-@DataMongoTest(excludeAutoConfiguration = EmbeddedMongoAutoConfiguration.class)
+@DataMongoTest(
+    excludeAutoConfiguration = EmbeddedMongoAutoConfiguration.class,
+    properties = {"spring.cloud.config.enabled=false"}
+)
 class PersistenceTests extends ContainerTestBase {
     @Autowired
     private RecommendationRepository repository;
