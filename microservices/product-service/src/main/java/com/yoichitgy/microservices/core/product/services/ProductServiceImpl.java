@@ -2,10 +2,15 @@ package com.yoichitgy.microservices.core.product.services;
 
 import static java.util.logging.Level.FINE;
 
+import java.lang.IllegalArgumentException;
+import java.time.Duration;
+import java.util.Random;
+
 import com.yoichitgy.api.core.product.Product;
 import com.yoichitgy.api.core.product.ProductService;
 import com.yoichitgy.api.exceptions.InvalidInputException;
 import com.yoichitgy.api.exceptions.NotFoundException;
+import com.yoichitgy.microservices.core.product.persistence.ProductEntity;
 import com.yoichitgy.microservices.core.product.persistence.ProductRepository;
 import com.yoichitgy.util.http.ServiceUtil;
 
@@ -50,13 +55,15 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Mono<Product> getProduct(int productId) {
+    public Mono<Product> getProduct(int productId, int delay, int faultPercent) {
         if (productId < 1) {
             throw new InvalidInputException("Invalid productId: " + productId);
         }
         LOG.debug("Will get product info for id={}", productId);
 
         return repository.findByProductId(productId)
+            .map(e -> throwErrorIfBadLuck(e, faultPercent))
+            .delayElement(Duration.ofSeconds(delay))
             .switchIfEmpty(
                 Mono.error(new NotFoundException("No product found for productId: " + productId))
             )
@@ -78,5 +85,29 @@ public class ProductServiceImpl implements ProductService {
         return repository.findByProductId(productId)
             .log(LOG.getName(), FINE)
             .flatMap(e -> repository.delete(e));
+    }
+
+    private ProductEntity throwErrorIfBadLuck(ProductEntity entity, int faultPercent) {
+        if (faultPercent <= 0) {
+            return entity;
+        }
+
+        int randomThreshold = getRandomNumber(1, 100);
+        if (faultPercent >= randomThreshold) {
+            LOG.debug("Bad luck, an error occurred, {} >= {}", faultPercent, randomThreshold);
+            throw new RuntimeException("Something went wrong...");
+        }
+
+        LOG.debug("We got lucky, no error occurred, {} < {}", faultPercent, randomThreshold);
+        return entity;
+    }
+
+    private final Random rand = new Random();
+    
+    private int getRandomNumber(int min, int max) {
+        if (max < min) {
+            throw new IllegalArgumentException("Max must be greater than or equal to min.");
+        }
+        return rand.nextInt(min, max + 1); // +1 for exclusive bound.
     }
 }
