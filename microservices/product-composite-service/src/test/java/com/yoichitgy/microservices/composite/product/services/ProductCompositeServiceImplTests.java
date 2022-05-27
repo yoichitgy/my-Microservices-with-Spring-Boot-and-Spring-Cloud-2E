@@ -1,6 +1,8 @@
 package com.yoichitgy.microservices.composite.product.services;
 
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 
 import com.yoichitgy.api.core.product.Product;
 import com.yoichitgy.api.core.recommendation.Recommendation;
@@ -44,17 +46,17 @@ class ProductCompositeServiceImplTests {
 
     @BeforeEach
     void setUp() {
-        when(compositeIntegration.getProduct(PRODUCT_ID_OK))
+        when(compositeIntegration.getProduct(eq(PRODUCT_ID_OK), anyInt(), anyInt()))
             .thenReturn(Mono.just(new Product(PRODUCT_ID_OK, "name", 1, "mock-address")));
         when(compositeIntegration.getRecommendations(PRODUCT_ID_OK))
             .thenReturn(Flux.just(new Recommendation(PRODUCT_ID_OK, 1, "author", 1, "content", "mock address")));
         when(compositeIntegration.getReviews(PRODUCT_ID_OK))
             .thenReturn(Flux.just(new Review(PRODUCT_ID_OK, 1, "author", "subject", "content", "mock address")));
       
-        when(compositeIntegration.getProduct(PRODUCT_ID_NOT_FOUND))
+        when(compositeIntegration.getProduct(eq(PRODUCT_ID_NOT_FOUND), anyInt(), anyInt()))
             .thenThrow(new NotFoundException("NOT FOUND: " + PRODUCT_ID_NOT_FOUND));
       
-        when(compositeIntegration.getProduct(PRODUCT_ID_INVALID))
+        when(compositeIntegration.getProduct(eq(PRODUCT_ID_INVALID), anyInt(), anyInt()))
             .thenThrow(new InvalidInputException("INVALID: " + PRODUCT_ID_INVALID));
     }
  
