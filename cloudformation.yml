@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Resources:
+  devVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: dev-vpc
+
+  devPublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: us-west-2a
+      VpcId: !Ref devVPC
+      CidrBlock: 10.0.0.0/24
+      Tags:
+        - Key: Name
+          Value: dev-public-subnet
+
+  devIgw:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: dev-igw
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref devVPC
+      InternetGatewayId: !Ref devIgw
+
+  devRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref devVPC
+      Tags:
+        - Key: Name
+          Value: dev-route-table
+
+  devRoutePublic:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref devRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref devIgw
+
+  routeTableAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref devPublicSubnet
+      RouteTableId: !Ref devRouteTable
+
+  devSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: dev-sec-group
+      GroupDescription: dev-sec-group
+      VpcId: !Ref devVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8443
+          ToPort: 8443
+          CidrIp: 0.0.0.0/0
+
+  devEC2:
+    Type: AWS::EC2::Instance
+    Properties:
+      DisableApiTermination: false
+      ImageId: ami-0ca285d4c2cda3300
+      InstanceType: r5ad.xlarge
+      Monitoring: false
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: "0"
+          SubnetId: !Ref devPublicSubnet
+          GroupSet:
+          - !Ref devSecGroup
+      Tags:
+        - Key: Name
+          Value: dev-ec2
