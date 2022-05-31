@@ -116,3 +116,22 @@ Resources:
       Tags:
         - Key: Name
           Value: dev-ec2
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum -y update
+          /opt/aws/bin/cfn-init --stack ${AWS::StackName} --resource devEC2 --region ${AWS::Region}    
+    Metadata: 
+      AWS::CloudFormation::Init:
+        config:
+          commands: 
+            01-git:
+              command: "yum -y install git"
+            02-jq:
+              command: "yum -y install jq"
+            03-corretto18:
+              command: "rpm --import https://yum.corretto.aws/corretto.key && curl -L -o /etc/yum.repos.d/corretto.repo https://yum.corretto.aws/corretto.repo && yum install -y java-18-amazon-corretto-devel"
+            04-docker:
+              command: "amazon-linux-extras install docker"
+            05-docker-compose:
+              command: "curl -L https://github.com/docker/compose/releases/download/v2.5.1/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose"
