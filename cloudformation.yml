@@ -74,12 +74,38 @@ Resources:
           ToPort: 8443
           CidrIp: 0.0.0.0/0
 
+  ec2SessionManagerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ec2-sessionmanager-role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  ec2SessionManagerProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - Ref: ec2SessionManagerRole
+      InstanceProfileName: ec2-sessionmanager-profile
+
   devEC2:
     Type: AWS::EC2::Instance
     Properties:
       DisableApiTermination: false
       ImageId: ami-0ca285d4c2cda3300
       InstanceType: r5ad.xlarge
+      IamInstanceProfile: !Ref ec2SessionManagerProfile
       Monitoring: false
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
