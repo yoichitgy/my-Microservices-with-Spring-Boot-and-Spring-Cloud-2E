@@ -96,12 +96,12 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
     }
 
     @Override
-    public Mono<ProductAggregate> getProduct(int productId) {
+    public Mono<ProductAggregate> getProduct(int productId, int delay, int faultPercent) {
         LOG.info("Will get composite product info for product.id={}", productId);
 
         return Mono.zip(
                 getLogAuthorizationInMono(),
-                integration.getProduct(productId),
+                integration.getProduct(productId, delay, faultPercent),
                 integration.getRecommendations(productId).collectList(),
                 integration.getReviews(productId).collectList()
             ).map(values -> {

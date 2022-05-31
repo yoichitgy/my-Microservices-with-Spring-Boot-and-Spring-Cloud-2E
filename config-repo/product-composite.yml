@@ -1,7 +1,7 @@
 springdoc:
   swagger-ui.path: /openapi/swagger-ui.html
   api-docs.path: /openapi/v3/api-docs
-  packagesToScan: se.magnus.microservices.composite.product
+  packagesToScan: com.yoichitgy.microservices.composite.product
   pathsToMatch: /**
   cache.disabled: true
 
@@ -96,10 +96,40 @@ spring.cloud.stream:
 
 spring.security.oauth2.resourceserver.jwt.issuer-uri: http://${app.auth-server}:9999
 
+resilience4j.timelimiter:
+  instances:
+    product:
+      timeoutDuration: 2s
+
+resilience4j.retry:
+  instances:
+    product:
+      maxAttempts: 3
+      waitDuration: 1000
+      retryExceptions:
+      - org.springframework.web.reactive.function.client.WebClientResponseException$InternalServerError
+
+management.health.circuitbreakers.enabled: true
+
+resilience4j.circuitbreaker:
+  instances:
+    product:
+      allowHealthIndicatorToFail: false
+      registerHealthIndicator: true
+      slidingWindowType: COUNT_BASED
+      slidingWindowSize: 5
+      failureRateThreshold: 50
+      waitDurationInOpenState: 10000
+      permittedNumberOfCallsInHalfOpenState: 3
+      automaticTransitionFromOpenToHalfOpenEnabled: true
+      ignoreExceptions:
+        - com.yoichitgy.api.exceptions.InvalidInputException
+        - com.yoichitgy.api.exceptions.NotFoundException
+
 logging:
   level:
     root: INFO
-    se.magnus: DEBUG
+    com.yoichitgy: DEBUG
     org.springframework.web.server.adapter.HttpWebHandlerAdapter: TRACE
 
 ---
