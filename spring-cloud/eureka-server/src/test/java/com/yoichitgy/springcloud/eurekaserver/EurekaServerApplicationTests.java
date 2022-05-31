@@ -12,7 +12,10 @@ import org.springframework.http.HttpStatus;
 
 @SpringBootTest(
 	webEnvironment = WebEnvironment.RANDOM_PORT,
-	properties = {"spring.cloud.config.enabled=false"}
+	properties = {
+		"management.health.rabbit.enabled=false",
+		"spring.cloud.config.enabled=false"
+	}
 )
 class EurekaServerApplicationTests {
 
