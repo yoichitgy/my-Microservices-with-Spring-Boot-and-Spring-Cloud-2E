@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 	webEnvironment = WebEnvironment.RANDOM_PORT,
 	properties = {
 		"eureka.client.enabled=false",
+		"spring.sleuth.mongodb.enabled=false",
 		"spring.cloud.config.enabled=false"
 	}
 )
