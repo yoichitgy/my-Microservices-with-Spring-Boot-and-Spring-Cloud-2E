@@ -3,6 +3,7 @@ version: '2.2'
 services:
   product:
     build: microservices/product-service
+    image: hands-on/product-service
     mem_limit: 512m
     environment:
       - SPRING_PROFILES_ACTIVE=docker
@@ -16,6 +17,7 @@ services:
   
   recommendation:
     build: microservices/recommendation-service
+    image: hands-on/recommendation-service
     mem_limit: 512m
     environment:
       - SPRING_PROFILES_ACTIVE=docker
@@ -29,6 +31,7 @@ services:
 
   review:
     build: microservices/review-service
+    image: hands-on/review-service
     mem_limit: 512m
     environment:
       - SPRING_PROFILES_ACTIVE=docker
@@ -42,6 +45,7 @@ services:
 
   product-composite:
     build: microservices/product-composite-service
+    image: hands-on/product-composite-service
     mem_limit: 512m
     environment:
       - SPRING_PROFILES_ACTIVE=docker
@@ -95,6 +99,7 @@ services:
   
   gateway:
     build: spring-cloud/gateway
+    image: hands-on/gateway
     mem_limit: 512m
     environment:
       - SPRING_PROFILES_ACTIVE=docker
@@ -108,6 +113,7 @@ services:
 
   auth-server:
     build: spring-cloud/authorization-server
+    image: hands-on/auth-server
     mem_limit: 512m
     environment:
       - SPRING_PROFILES_ACTIVE=docker
@@ -121,6 +127,7 @@ services:
 
   config-server:
     build: spring-cloud/config-server
+    image: hands-on/config-server
     mem_limit: 512m
     environment:
       - SPRING_PROFILES_ACTIVE=docker,native
