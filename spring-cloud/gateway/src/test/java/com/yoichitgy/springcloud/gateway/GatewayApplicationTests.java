@@ -8,7 +8,6 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 	webEnvironment = WebEnvironment.RANDOM_PORT,
 	properties = {
 		"spring.security.oauth2.resourceserver.jwt.jwk-set-uri=some-url",
-		"eureka.client.enabled=false",
 		"spring.cloud.config.enabled=false"
 	}
 )

@@ -27,7 +27,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
     properties = {
         "spring.cloud.stream.defaultBinder=rabbit",
         "logging.level.com.yoichitgy=DEBUG",
-        "eureka.client.enabled=false",
         "spring.jpa.hibernate.ddl-auto=update",
         "spring.cloud.config.enabled=false"
     }
