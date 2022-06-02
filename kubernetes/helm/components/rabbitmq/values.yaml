@@ -3,7 +3,7 @@ fullnameOverride: rabbitmq
 image:
   repository: registry.hub.docker.com/library
   name: rabbitmq
-  tag: 3.8.11-management
+  tag: 3.10.1-management
   pullPolicy: IfNotPresent
 
 ports:

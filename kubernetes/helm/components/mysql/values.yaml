@@ -3,7 +3,7 @@ fullnameOverride: mysql
 image:
   repository: registry.hub.docker.com/library
   name: mysql
-  tag: 5.7.32
+  tag: 8.0.29
   pullPolicy: IfNotPresent
   args:
     - "--ignore-db-dir=lost+found"
