@@ -7,8 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 @SpringBootTest(
 	webEnvironment = WebEnvironment.RANDOM_PORT,
 	properties = {
-		"spring.sleuth.mongodb.enabled=false",
-		"spring.cloud.config.enabled=false"
+		"spring.sleuth.mongodb.enabled=false"
 	}
 )
 class ProductServiceApplicationTests extends ContainerTestBase {

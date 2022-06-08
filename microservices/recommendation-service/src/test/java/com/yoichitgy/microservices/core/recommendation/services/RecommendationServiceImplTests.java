@@ -26,8 +26,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 @SpringBootTest(
     webEnvironment = WebEnvironment.RANDOM_PORT,
     properties = {
-        "spring.sleuth.mongodb.enabled=false",
-        "spring.cloud.config.enabled=false"
+        "spring.sleuth.mongodb.enabled=false"
     }
 )
 class RecommendationServiceImplTests extends ContainerTestBase {
