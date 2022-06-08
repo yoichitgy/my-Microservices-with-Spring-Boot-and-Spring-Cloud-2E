@@ -38,13 +38,6 @@ spring.cloud.gateway.routes:
   predicates:
   - Path=/webjars/**
 
-- id: config-server
-  uri: ${spring.cloud.config.uri}
-  predicates:
-  - Path=/config/**
-  filters:
-  - RewritePath=/config/(?<segment>.*), /$\{segment}
-
 spring.security.oauth2.resourceserver.jwt.issuer-uri: http://${app.auth-server}
 
 spring.sleuth.reactor.instrumentation-type: decorate-on-last

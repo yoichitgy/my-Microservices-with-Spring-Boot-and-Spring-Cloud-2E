@@ -13,8 +13,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
 @DataMongoTest(
-    excludeAutoConfiguration = EmbeddedMongoAutoConfiguration.class,
-    properties = {"spring.cloud.config.enabled=false"}
+    excludeAutoConfiguration = EmbeddedMongoAutoConfiguration.class
 )
 class PersistenceTests extends ContainerTestBase {
     @Autowired
