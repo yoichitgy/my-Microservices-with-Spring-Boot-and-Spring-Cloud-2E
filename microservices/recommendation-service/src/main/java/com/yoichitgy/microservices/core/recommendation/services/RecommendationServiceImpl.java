@@ -2,17 +2,18 @@ package com.yoichitgy.microservices.core.recommendation.services;
 
 import static java.util.logging.Level.FINE;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.yoichitgy.api.core.recommendation.Recommendation;
 import com.yoichitgy.api.core.recommendation.RecommendationService;
 import com.yoichitgy.api.exceptions.InvalidInputException;
 import com.yoichitgy.microservices.core.recommendation.persistence.RecommendationRepository;
 import com.yoichitgy.util.http.ServiceUtil;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.web.bind.annotation.RestController;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -56,7 +57,7 @@ public class RecommendationServiceImpl implements RecommendationService {
     }
 
     @Override
-    public Flux<Recommendation> getRecommendations(int productId) {
+    public Flux<Recommendation> getRecommendations(HttpHeaders headers, int productId) {
         if (productId < 1) {
             throw new InvalidInputException("Invalid productId: " + productId);
         }

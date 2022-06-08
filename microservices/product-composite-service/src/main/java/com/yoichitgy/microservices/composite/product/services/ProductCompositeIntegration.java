@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -79,7 +80,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     @Retry(name = "product")
     @TimeLimiter(name = "product")
     @CircuitBreaker(name = "product", fallbackMethod = "getProductFallbackValue")
-    public Mono<Product> getProduct(int productId, int delay, int faultPercent) {
+    public Mono<Product> getProduct(HttpHeaders headers, int productId, int delay, int faultPercent) {
         var url = UriComponentsBuilder.fromUriString(
             PRODUCT_SERVICE_URL + "/product/{productId}?delay={delay}&faultPercent={faultPercent}"
         ).build(productId, delay, faultPercent);
@@ -87,15 +88,20 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 
         return webClient.get()
             .uri(url)
+            .headers(h -> h.addAll(headers))
             .retrieve()
             .bodyToMono(Product.class)
             .log(LOG.getName(), Level.FINE)
             .onErrorMap(WebClientResponseException.class, ex -> handleException(ex));
     }
 
-    private Mono<Product> getProductFallbackValue(int productId, int delay, int faultPercent, CallNotPermittedException ex) {
+    private Mono<Product> getProductFallbackValue(HttpHeaders headers, int productId, int delay, int faultPercent, CallNotPermittedException ex) {
         LOG.warn("Creating a fail-fast fallback product for productId = {}, delay = {}, faultPercent = {} and exception = {} ",
             productId, delay, faultPercent, ex.toString());
+
+        if (productId < 1) {
+            throw new InvalidInputException("Invalid productId: " + productId);
+        }
 
         if (productId == 13) {
             String errMsg = "Product Id: " + productId + " not found in fallback cache!";
@@ -125,15 +131,16 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     @Override
-    public Flux<Recommendation> getRecommendations(int productId) {
+    public Flux<Recommendation> getRecommendations(HttpHeaders headers, int productId) {
         var url = UriComponentsBuilder.fromUriString(
             RECOMMENDATION_SERVICE_URL + "/recommendation?productId={productId}"
         ).build(productId);
         LOG.debug("Will call getRecommendations API on URL: {}", url);
 
         return webClient.get()
-            .uri(url).
-            retrieve()
+            .uri(url)
+            .headers(h -> h.addAll(headers))
+            .retrieve()
             .bodyToFlux(Recommendation.class)
             .log(LOG.getName(), Level.FINE)
             .onErrorResume(error -> {
@@ -160,7 +167,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
     }
 
     @Override
-    public Flux<Review> getReviews(int productId) {
+    public Flux<Review> getReviews(HttpHeaders headers, int productId) {
         var url = UriComponentsBuilder.fromUriString(
             REVIEW_SERVICE_URL + "/review?productId={productId}"
         ).build(productId);
@@ -168,6 +175,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 
         return webClient.get()
             .uri(url)
+            .headers(h -> h.addAll(headers))
             .retrieve()
             .bodyToFlux(Review.class)
             .log(LOG.getName(), Level.FINE)

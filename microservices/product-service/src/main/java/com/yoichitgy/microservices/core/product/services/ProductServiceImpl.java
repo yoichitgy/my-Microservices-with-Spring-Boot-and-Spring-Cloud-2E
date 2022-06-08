@@ -2,9 +2,15 @@ package com.yoichitgy.microservices.core.product.services;
 
 import static java.util.logging.Level.FINE;
 
-import java.lang.IllegalArgumentException;
 import java.time.Duration;
 import java.util.Random;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.yoichitgy.api.core.product.Product;
 import com.yoichitgy.api.core.product.ProductService;
@@ -13,12 +19,6 @@ import com.yoichitgy.api.exceptions.NotFoundException;
 import com.yoichitgy.microservices.core.product.persistence.ProductEntity;
 import com.yoichitgy.microservices.core.product.persistence.ProductRepository;
 import com.yoichitgy.util.http.ServiceUtil;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.web.bind.annotation.RestController;
 
 import reactor.core.publisher.Mono;
 
@@ -55,7 +55,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Mono<Product> getProduct(int productId, int delay, int faultPercent) {
+    public Mono<Product> getProduct(HttpHeaders headers, int productId, int delay, int faultPercent) {
         if (productId < 1) {
             throw new InvalidInputException("Invalid productId: " + productId);
         }

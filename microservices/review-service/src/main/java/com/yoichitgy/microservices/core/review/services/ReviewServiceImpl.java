@@ -3,20 +3,20 @@ package com.yoichitgy.microservices.core.review.services;
 import static java.util.logging.Level.FINE;
 
 import java.util.List;
-import java.util.concurrent.Callable;
-
-import com.yoichitgy.api.core.review.Review;
-import com.yoichitgy.api.core.review.ReviewService;
-import com.yoichitgy.api.exceptions.InvalidInputException;
-import com.yoichitgy.microservices.core.review.persistence.ReviewRepository;
-import com.yoichitgy.util.http.ServiceUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.yoichitgy.api.core.review.Review;
+import com.yoichitgy.api.core.review.ReviewService;
+import com.yoichitgy.api.exceptions.InvalidInputException;
+import com.yoichitgy.microservices.core.review.persistence.ReviewRepository;
+import com.yoichitgy.util.http.ServiceUtil;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -72,7 +72,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public Flux<Review> getReviews(int productId) {
+    public Flux<Review> getReviews(HttpHeaders headers, int productId) {
         if (productId < 1) {
             throw new InvalidInputException("Invalid productId: " + productId);
         }
