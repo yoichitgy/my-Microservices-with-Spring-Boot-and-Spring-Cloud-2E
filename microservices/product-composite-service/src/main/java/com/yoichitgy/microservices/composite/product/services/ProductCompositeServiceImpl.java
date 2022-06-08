@@ -17,6 +17,7 @@ import com.yoichitgy.util.http.ServiceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -96,14 +97,15 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
     }
 
     @Override
-    public Mono<ProductAggregate> getProduct(int productId, int delay, int faultPercent) {
+    public Mono<ProductAggregate> getProduct(HttpHeaders requestHeaders, int productId, int delay, int faultPercent) {
         LOG.info("Will get composite product info for product.id={}", productId);
 
+        var headers = getHeaders(requestHeaders, "X-group");
         return Mono.zip(
                 getLogAuthorizationInMono(),
-                integration.getProduct(productId, delay, faultPercent),
-                integration.getRecommendations(productId).collectList(),
-                integration.getReviews(productId).collectList()
+                integration.getProduct(headers, productId, delay, faultPercent),
+                integration.getRecommendations(headers, productId).collectList(),
+                integration.getReviews(headers, productId).collectList()
             ).map(values -> {
                 var product = values.getT2();
                 var recommendations = values.getT3();
@@ -112,6 +114,19 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
                 return createProductAggregate(product, recommendations, reviews, address);
             }).doOnError(ex -> LOG.warn("getCompositeProduct failed: {}", ex.toString()))
             .log(LOG.getName(), Level.FINE);
+    }
+
+    private HttpHeaders getHeaders(HttpHeaders requestHeaders, String... headers) {
+        LOG.trace("Will look for {} headers: {}", headers.length, headers);
+        var h = new HttpHeaders();
+        for (var header: headers) {
+            var value = requestHeaders.get(header);
+            if (value != null) {
+                h.addAll(header, value);
+            }
+        }
+        LOG.trace("Will transfer {}, headers: {}", h.size(), h);
+        return h;
     }
 
     @Override

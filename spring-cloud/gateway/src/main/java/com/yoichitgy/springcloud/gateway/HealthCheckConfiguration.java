@@ -32,11 +32,11 @@ public class HealthCheckConfiguration {
     ReactiveHealthContributor healthCheckMicroservices() {
         var registry = new LinkedHashMap<String, ReactiveHealthIndicator>();
 
-        registry.put("product", () -> getHealth("http://product"));
-        registry.put("recommendation", () -> getHealth("http://recommendation"));
-        registry.put("review", () -> getHealth("http://review"));
-        registry.put("product-composite", () -> getHealth("http://product-composite"));
-        registry.put("auth-server", () -> getHealth("http://auth-server"));
+        registry.put("product", () -> getHealth("http://product:4004"));
+        registry.put("recommendation", () -> getHealth("http://recommendation:4004"));
+        registry.put("review", () -> getHealth("http://review:4004"));
+        registry.put("product-composite", () -> getHealth("http://product-composite:4004"));
+        registry.put("auth-server", () -> getHealth("http://auth-server:4004"));
     
         return CompositeReactiveHealthContributor.fromMap(registry);
     }
