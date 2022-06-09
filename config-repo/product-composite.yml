@@ -78,6 +78,7 @@ api:
 
 server.port: 7000
 server.error.include-message: always
+spring.application.name: product-composite
 
 spring.cloud.stream:
   default.contentType: application/json
