@@ -125,13 +125,30 @@ Resources:
       AWS::CloudFormation::Init:
         config:
           commands: 
-            01-git:
+            git:
               command: "yum -y install git"
-            02-jq:
+            jq:
               command: "yum -y install jq"
-            03-corretto18:
+            siege:
+              command: "amazon-linux-extras install -y epel && yum -y install siege"
+            corretto18:
               command: "rpm --import https://yum.corretto.aws/corretto.key && curl -L -o /etc/yum.repos.d/corretto.repo https://yum.corretto.aws/corretto.repo && yum install -y java-18-amazon-corretto-devel"
-            04-docker:
+            docker:
               command: "amazon-linux-extras install docker"
-            05-docker-compose:
+            docker-compose:
               command: "curl -L https://github.com/docker/compose/releases/download/v2.5.1/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose"
+            kubectl:
+              command: "curl -L https://storage.googleapis.com/kubernetes-release/release/v1.24.1/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl && chmod +x /usr/local/bin/kubectl"
+            minikube:
+              command: "curl -L https://storage.googleapis.com/minikube/releases/v1.25.2/minikube-linux-amd64 -o /usr/local/bin/minikube && chmod +x /usr/local/bin/minikube"
+            istioctl:
+              command: "curl -LO https://github.com/istio/istio/releases/download/1.13.4/istio-1.13.4-linux-amd64.tar.gz && tar xzf istio-1.13.4-linux-amd64.tar.gz && mv istio-1.13.4/bin/istioctl /usr/local/bin/istioctl"
+            helm:
+              command: "curl -LO https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz && tar xzf helm-v3.9.0-linux-amd64.tar.gz && mv linux-amd64/helm /usr/local/bin/helm"
+          #
+          # Run the following command on your own after logging in as ssm-user on Session Manager.
+          #
+          # docker-config:
+          #   command: "sudo groupadd docker && sudo usermod -aG docker ssm-user"
+          # docker-daemon:
+          #   command: "sudo systemctl start docker && sudo systemctl enable docker"
