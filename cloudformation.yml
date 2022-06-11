@@ -113,6 +113,12 @@ Resources:
           SubnetId: !Ref devPublicSubnet
           GroupSet:
           - !Ref devSecGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs: 
+            VolumeSize: 30
+            VolumeType: gp2
+            DeleteOnTermination: true
       Tags:
         - Key: Name
           Value: dev-ec2
